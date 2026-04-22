@@ -1,0 +1,6 @@
+[build]
+builder = "nixpacks"
+buildCommand = "CGO_ENABLED=0 go build -ldflags='-w -s' -o out ./cmd/main.go"
+
+[deploy]
+startCommand = "./out"
