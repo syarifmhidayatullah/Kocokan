@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kocokan — Kocok Arisan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/main.css">
+<style>
+  .public-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .public-card {
+    width: 100%;
+    max-width: 520px;
+  }
+  .public-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .public-brand-mark {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: var(--cream);
+    display: grid; place-items: center;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 24px;
+  }
+  .public-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .public-title .italic { font-style: italic; color: var(--clay); }
+  .public-sub {
+    font-size: 14px;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  .name-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .name-input-row input {
+    flex: 1;
+  }
+
+  .name-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+    margin-bottom: 20px;
+  }
+  .name-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--cream-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .name-chip button {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--line-2);
+    color: var(--ink-3);
+    display: grid; place-items: center;
+    font-size: 10px;
+    line-height: 1;
+    transition: background .15s, color .15s;
+  }
+  .name-chip button:hover { background: oklch(0.70 0.10 20); color: white; }
+
+  .draw-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform .1s, opacity .1s;
+  }
+  .draw-btn:active { transform: scale(0.98); }
+  .draw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Result display */
+  .result-overlay {
+    position: fixed; inset: 0;
+    background: oklch(0.18 0.01 270 / 0.65);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: 0 32px 80px oklch(0 0 0 / 0.35);
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    animation: popIn .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .result-emoji {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 20px;
+    animation: bounce 0.6s ease 0.2s both;
+  }
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    80% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  .result-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .result-name {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .result-from {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-bottom: 32px;
+  }
+
+  /* Drumroll animation */
+  .drumroll-wrap {
+    position: fixed; inset: 0;
+    background: oklch(0.18 0.01 270 / 0.72);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .drumroll-slot {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 56px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .drumroll-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 16px;
+  }
+  .drumroll-name {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    min-width: 240px;
+    animation: flicker 0.08s steps(1) infinite;
+  }
+  @keyframes flicker {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+  }
+
+  .empty-hint {
+    color: var(--ink-3);
+    font-size: 13px;
+    text-align: center;
+    padding: 12px;
+  }
+  .app-link {
+    text-align: center;
+    margin-top: 24px;
+  }
+  .app-link a {
+    font-size: 13px;
+    color: var(--ink-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color .15s;
+  }
+  .app-link a:hover { color: var(--clay); }
+</style>
+</head>
+<body>
+<div class="public-wrap" x-data="publicApp()" @keydown.enter.window="handleEnter">
+  <div class="public-card">
+    <div class="public-brand">
+      <div class="public-brand-mark">K</div>
+      <div>
+        <p class="public-title">Koco<span class="italic">kan</span></p>
+        <p class="public-sub">Kocok nama secara acak</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-eyebrow" style="margin-bottom:16px">Tambah Peserta</p>
+      <div class="name-input-row">
+        <input class="input" type="text" placeholder="Nama peserta..." x-model="inputName" @keydown.enter.prevent="addName" autofocus>
+        <button class="btn clay" @click="addName" :disabled="!inputName.trim()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Tambah
+        </button>
+      </div>
+
+      <div class="name-list" x-show="names.length > 0">
+        <template x-for="(n, i) in names" :key="i">
+          <span class="name-chip">
+            <span x-text="n"></span>
+            <button @click="removeName(i)" title="Hapus">✕</button>
+          </span>
+        </template>
+      </div>
+      <div class="empty-hint" x-show="names.length === 0">
+        Belum ada peserta — tambahkan nama di atas
+      </div>
+
+      <div class="dash-rule"></div>
+
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <span class="stat-label" style="font-size:11px;">Total peserta</span>
+          <div style="font-family:var(--font-serif);font-size:28px;letter-spacing:-0.02em;" x-text="names.length"></div>
+        </div>
+        <button class="btn clay draw-btn" style="width:auto;padding:12px 24px;" @click="startDraw" :disabled="names.length < 2">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          Kocok!
+        </button>
+      </div>
+    </div>
+
+    <div class="app-link">
+      <a href="/app">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Kelola grup arisan — Login
+      </a>
+    </div>
+  </div>
+
+  <!-- Drumroll animation -->
+  <div class="drumroll-wrap" x-show="drumrolling" style="display:none;">
+    <div class="drumroll-slot">
+      <div class="drumroll-label">🎰 Mengocok...</div>
+      <div class="drumroll-name" x-text="drumName"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-overlay" x-show="result !== null" @click.self="result = null" style="display:none;">
+    <div class="result-card">
+      <div class="result-emoji">🎉</div>
+      <div class="result-label">Pemenang Arisan</div>
+      <div class="result-name" x-text="result"></div>
+      <div class="result-from" x-text="`dari ${names.length} peserta`"></div>
+      <div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+        <button class="btn" @click="result = null">Tutup</button>
+        <button class="btn clay" @click="startDraw">Kocok Lagi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+function publicApp() {
+  return {
+    inputName: '',
+    names: [],
+    drumrolling: false,
+    drumName: '',
+    result: null,
+    _timer: null,
+
+    handleEnter() {},
+
+    addName() {
+      const n = this.inputName.trim();
+      if (!n) return;
+      this.names.push(n);
+      this.inputName = '';
+    },
+
+    removeName(i) {
+      this.names.splice(i, 1);
+    },
+
+    startDraw() {
+      if (this.names.length < 2) return;
+      this.result = null;
+      this.drumrolling = true;
+      let count = 0;
+      const total = 22;
+      const picked = this.names[Math.floor(Math.random() * this.names.length)];
+      const tick = () => {
+        count++;
+        const idx = Math.floor(Math.random() * this.names.length);
+        this.drumName = this.names[idx];
+        if (count < total) {
+          const delay = 60 + Math.pow(count / total, 2.5) * 300;
+          this._timer = setTimeout(tick, delay);
+        } else {
+          this.drumrolling = false;
+          this.result = picked;
+        }
+      };
+      tick();
+    },
+  };
+}
+</script>
+</body>
+</html>

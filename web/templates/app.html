@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kocokan — Arisan Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/main.css">
+<style>
+/* ── Auth pages ─────────────────────────────── */
+.auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  position: relative;
+  z-index: 1;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.auth-brand-mark {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--cream);
+  display: grid; place-items: center;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+}
+.auth-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+.auth-title em { font-style: italic; color: var(--clay); }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.form-error { font-size: 12px; color: oklch(0.55 0.18 25); }
+.submit-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; margin-top: 6px; }
+
+/* ── Draw screen ─────────────────────────────── */
+.draw-wrap {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+.draw-slot {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.draw-slot-label {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.draw-slot-name {
+  font-family: var(--font-serif);
+  font-size: clamp(44px, 8vw, 80px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  min-height: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.draw-slot-name.rolling {
+  animation: flicker 0.08s steps(1) infinite;
+}
+@keyframes flicker {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+.draw-slot-name.revealed {
+  animation: revealPop .4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  color: var(--clay);
+}
+@keyframes revealPop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+.draw-ticket {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 40px 56px;
+  text-align: center;
+  position: relative;
+  overflow: visible;
+}
+.draw-ticket::before, .draw-ticket::after {
+  content: "";
+  position: absolute;
+  width: 16px; height: 16px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.draw-ticket::before { left: -9px; }
+.draw-ticket::after { right: -9px; }
+.draw-round-info {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+/* ── Group cards ─────────────────────────────── */
+.group-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.group-card:hover { border-color: var(--clay); transform: translateY(-1px); }
+.group-emoji { font-size: 32px; line-height: 1; margin-bottom: 12px; }
+.group-name {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.group-desc {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-bottom: 14px;
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+.group-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ── Participants list ──────────────────────── */
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.participant-row:last-child { border-bottom: none; }
+.p-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Rounds list ───────────────────────────── */
+.round-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+.round-row:last-child { border-bottom: none; }
+.round-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  min-width: 54px;
+}
+
+/* ── Modal ──────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: oklch(0.18 0.01 270 / 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px oklch(0 0 0 / 0.25);
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp .25s ease both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  margin: 0 0 20px;
+}
+.modal-title em { font-style: italic; color: var(--clay); }
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* ── Toast ──────────────────────────────────── */
+.toast-list {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.3);
+  animation: toastIn .2s ease both;
+  pointer-events: auto;
+}
+.toast.error { background: oklch(0.45 0.18 25); }
+.toast.success { background: oklch(0.42 0.10 160); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Progress bar ───────────────────────────── */
+.progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--clay), oklch(0.65 0.12 50));
+  transition: width .4s ease;
+}
+
+/* ── Tabs ────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.tab.active { color: var(--clay); border-color: var(--clay); }
+.tab:hover:not(.active) { color: var(--ink-2); }
+
+/* ── Empty state ─────────────────────────────── */
+.empty-state {
+  padding: 56px 24px;
+  text-align: center;
+}
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+.empty-state-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+}
+.empty-state-sub { font-size: 13.5px; color: var(--ink-3); margin-bottom: 20px; }
+</style>
+</head>
+<body x-data="app()" x-init="init()">
+
+<!-- ── Sidebar overlay (mobile) ─────────────── -->
+<div
+  x-show="sidebarOpen"
+  @click="sidebarOpen = false"
+  style="position:fixed;inset:0;background:oklch(0.18 0.01 270 / 0.5);z-index:40;display:none;"
+  x-transition.opacity
+></div>
+
+<!-- ── Auth pages (login / register) ─────────── -->
+<template x-if="!user">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">K</div>
+        <div>
+          <p style="font-family:var(--font-serif);font-size:22px;font-weight:400;letter-spacing:-0.015em;margin:0;">Kocokan</p>
+          <p style="font-size:12px;color:var(--ink-3);margin:2px 0 0;">Arisan modern, tanpa ribet</p>
+        </div>
+      </div>
+
+      <!-- Register -->
+      <template x-if="authPage === 'register'">
+        <div class="card">
+          <h2 class="auth-title">Daftar <em>akun</em></h2>
+          <div class="form-group">
+            <label class="form-label">Nama lengkap</label>
+            <input class="input" type="text" x-model="authForm.name" placeholder="Nama kamu">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="input" type="email" x-model="authForm.email" placeholder="email@contoh.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="input" type="password" x-model="authForm.password" placeholder="Min. 6 karakter" @keydown.enter="doRegister">
+          </div>
+          <p class="form-error" x-show="authError" x-text="authError"></p>
+          <button class="btn clay submit-btn" @click="doRegister" :disabled="authLoading">
+            <span x-text="authLoading ? 'Mendaftar...' : 'Daftar'"></span>
+          </button>
+          <p style="text-align:center;font-size:13px;color:var(--ink-3);margin-top:16px;">
+            Sudah punya akun?
+            <button class="btn ghost sm" @click="authPage='login';authError=''">Masuk</button>
+          </p>
+        </div>
+      </template>
+
+      <!-- Login -->
+      <template x-if="authPage === 'login'">
+        <div class="card">
+          <h2 class="auth-title">Masuk ke <em>akun</em></h2>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="input" type="email" x-model="authForm.email" placeholder="email@contoh.com" autofocus>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="input" type="password" x-model="authForm.password" placeholder="Password" @keydown.enter="doLogin">
+          </div>
+          <p class="form-error" x-show="authError" x-text="authError"></p>
+          <button class="btn clay submit-btn" @click="doLogin" :disabled="authLoading">
+            <span x-text="authLoading ? 'Masuk...' : 'Masuk'"></span>
+          </button>
+          <p style="text-align:center;font-size:13px;color:var(--ink-3);margin-top:16px;">
+            Belum punya akun?
+            <button class="btn ghost sm" @click="authPage='register';authError=''">Daftar</button>
+          </p>
+        </div>
+      </template>
+
+      <div style="text-align:center;margin-top:20px;">
+        <a href="/" style="font-size:13px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Kocok tanpa login
+        </a>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ── Main app shell ─────────────────────────── -->
+<template x-if="user">
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ open: sidebarOpen }">
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div class="brand-name">
+          Kocokan
+          <span>Arisan Admin</span>
+        </div>
+        <button class="icon-btn" style="margin-left:auto;display:none;" @click="sidebarOpen=false" x-show="sidebarOpen">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <nav class="nav">
+        <span class="nav-section">Menu</span>
+        <button class="nav-item" :class="{ active: view === 'groups' }" @click="gotoGroups()">
+          <svg class="icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Grup Arisan
+          <span class="count" x-text="groups.length" x-show="groups.length > 0"></span>
+        </button>
+        <button class="nav-item" :class="{ active: view === 'public' }" @click="view='public';sidebarOpen=false">
+          <svg class="icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Kocok Publik
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-toggle">
+          <button :class="{ active: !dark }" @click="setTheme(false)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Terang
+          </button>
+          <button :class="{ active: dark }" @click="setTheme(true)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Gelap
+          </button>
+        </div>
+        <div class="user-chip">
+          <div class="avatar a1" x-text="user.name?.[0]?.toUpperCase() || 'U'"></div>
+          <div class="grow">
+            <div style="font-size:13px;font-weight:600;" x-text="user.name"></div>
+            <div class="xs muted" x-text="user.email"></div>
+          </div>
+          <button class="btn ghost sm" @click="doLogout" title="Logout">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main">
+      <!-- Topbar -->
+      <div class="topbar">
+        <button class="icon-btn menu-btn" @click="sidebarOpen = !sidebarOpen">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div style="font-size:14px;font-weight:600;" x-text="pageTitle"></div>
+        <div class="topbar-actions">
+          <template x-if="view === 'groups'">
+            <button class="btn clay sm" @click="openGroupModal()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Buat Grup
+            </button>
+          </template>
+          <template x-if="view === 'group-detail'">
+            <div class="row" style="gap:8px;">
+              <button class="btn clay sm" @click="openDrawScreen()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Kocok
+              </button>
+              <button class="btn sm" @click="openGroupModal(activeGroup)">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Groups list view -->
+      <template x-if="view === 'groups'">
+        <div class="content">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">Grup <span class="accent">Arisan</span></h1>
+              <p class="page-sub">Kelola semua grup dan kocok giliran pemenang arisan kamu.</p>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <template x-if="loadingGroups">
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <template x-for="i in 3">
+                <div class="card" style="width:240px;height:160px;animation:pulse 1.5s ease infinite;">
+                  <div style="height:100%;background:var(--cream-2);border-radius:8px;"></div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Empty -->
+          <template x-if="!loadingGroups && groups.length === 0">
+            <div class="card">
+              <div class="empty-state">
+                <div class="empty-state-icon">🎰</div>
+                <div class="empty-state-title">Belum ada grup</div>
+                <div class="empty-state-sub">Buat grup arisan pertamamu dan mulai kocok!</div>
+                <button class="btn clay" @click="openGroupModal()">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  Buat Grup Pertama
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Groups grid -->
+          <template x-if="!loadingGroups && groups.length > 0">
+            <div class="groups-grid">
+              <template x-for="g in groups" :key="g.id">
+                <div class="group-card" @click="gotoGroup(g)">
+                  <div class="group-emoji" x-text="g.emoji || '🎰'"></div>
+                  <div class="group-name" x-text="g.name"></div>
+                  <div class="group-desc" x-text="g.description || 'Tidak ada deskripsi'"></div>
+                  <div class="group-meta">
+                    <span class="chip">
+                      <span class="dot"></span>
+                      <span x-text="g.num_participants + ' peserta'"></span>
+                    </span>
+                    <span class="chip turmeric" x-text="g.period_type === 'monthly' ? 'Bulanan' : (g.period_type === 'weekly' ? 'Mingguan' : g.period_type)"></span>
+                  </div>
+                  <div class="progress-bar" style="margin-bottom:8px;">
+                    <div class="progress-fill" :style="`width:${progressPct(g)}%`"></div>
+                  </div>
+                  <div class="row" style="justify-content:space-between;">
+                    <span class="xs muted">
+                      <span x-text="(g.rounds || []).filter(r => r.winner_id).length"></span>/<span x-text="g.total_rounds"></span> putaran
+                    </span>
+                    <span class="chip pandan" x-show="g.is_active">Aktif</span>
+                    <span class="chip" x-show="!g.is_active">Selesai</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Group detail view -->
+      <template x-if="view === 'group-detail' && activeGroup">
+        <div class="content">
+          <div class="crumb">
+            <button class="btn ghost sm" @click="gotoGroups()" style="padding:4px 8px;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              Grup
+            </button>
+            <span class="dot-sep"></span>
+            <span x-text="activeGroup.name"></span>
+          </div>
+
+          <div class="page-head">
+            <div>
+              <div style="font-size:40px;line-height:1;margin-bottom:8px;" x-text="activeGroup.emoji || '🎰'"></div>
+              <h1 class="page-title" style="font-size:clamp(28px,4vw,44px);" x-text="activeGroup.name"></h1>
+              <p class="page-sub" x-text="activeGroup.description || ''"></p>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div class="bento" style="margin-bottom:24px;">
+            <div class="card col-3">
+              <div class="card-eyebrow">Peserta</div>
+              <div class="stat-big" x-text="(activeGroup.participants || []).length"><span class="unit">orang</span></div>
+            </div>
+            <div class="card col-3">
+              <div class="card-eyebrow">Total Putaran</div>
+              <div class="stat-big" x-text="activeGroup.total_rounds"></div>
+            </div>
+            <div class="card col-3">
+              <div class="card-eyebrow">Sudah Dikocok</div>
+              <div class="stat-big" x-text="(activeGroup.rounds || []).filter(r => r.winner_id).length"></div>
+            </div>
+            <div class="card col-3">
+              <div class="card-eyebrow">Hadiah</div>
+              <div class="stat-big" x-text="formatRupiah(activeGroup.prize_amount)"></div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab" :class="{ active: detailTab === 'participants' }" @click="detailTab='participants'">Peserta</button>
+            <button class="tab" :class="{ active: detailTab === 'rounds' }" @click="detailTab='rounds'">Putaran</button>
+          </div>
+
+          <!-- Participants tab -->
+          <template x-if="detailTab === 'participants'">
+            <div class="card">
+              <div class="between" style="margin-bottom:16px;">
+                <div class="card-title">Daftar Peserta</div>
+                <button class="btn sm clay" @click="openParticipantModal()">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  Tambah
+                </button>
+              </div>
+              <template x-if="(activeGroup.participants || []).length === 0">
+                <div class="empty-state">
+                  <div class="empty-state-icon">👤</div>
+                  <div class="empty-state-title">Belum ada peserta</div>
+                  <div class="empty-state-sub">Tambahkan peserta untuk mulai kocok arisan.</div>
+                </div>
+              </template>
+              <template x-for="(p, i) in (activeGroup.participants || [])" :key="p.id">
+                <div class="participant-row">
+                  <div class="p-avatar" :class="'a' + ((i % 6) + 1)" x-text="p.name[0].toUpperCase()"></div>
+                  <div class="grow">
+                    <div style="font-size:13.5px;font-weight:500;" x-text="p.name"></div>
+                    <div class="xs muted" x-text="p.phone || p.notes || '—'"></div>
+                  </div>
+                  <div class="row" style="gap:6px;">
+                    <button class="btn ghost sm" @click="openParticipantModal(p)" title="Edit">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn ghost sm" @click="deleteParticipant(p)" title="Hapus" style="color:oklch(0.55 0.18 25);">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Rounds tab -->
+          <template x-if="detailTab === 'rounds'">
+            <div class="card">
+              <div class="between" style="margin-bottom:16px;">
+                <div class="card-title">Putaran Arisan</div>
+                <button class="btn sm clay" @click="openDrawScreen()">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  Kocok Sekarang
+                </button>
+              </div>
+              <template x-for="r in sortedRounds" :key="r.id">
+                <div class="round-row">
+                  <span class="round-num mono">Rnd <span x-text="r.round_number"></span></span>
+                  <div class="grow">
+                    <template x-if="r.winner_id && r.winner">
+                      <div class="row" style="gap:8px;">
+                        <div class="p-avatar a1" style="width:28px;height:28px;font-size:11px;" x-text="r.winner.name[0].toUpperCase()"></div>
+                        <span style="font-size:13.5px;font-weight:500;" x-text="r.winner.name"></span>
+                        <span class="chip pandan">Menang</span>
+                      </div>
+                    </template>
+                    <template x-if="!r.winner_id">
+                      <span class="muted small">Belum dikocok</span>
+                    </template>
+                  </div>
+                  <div class="row" style="gap:6px;">
+                    <span class="xs muted" x-show="r.drawn_at" x-text="formatDate(r.drawn_at)"></span>
+                    <button class="btn ghost sm" @click="openWinnerModal(r)" title="Set pemenang">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </template>
+              <template x-if="(activeGroup.rounds || []).length === 0">
+                <div class="empty-state">
+                  <div class="empty-state-icon">🎲</div>
+                  <div class="empty-state-title">Belum ada putaran</div>
+                  <div class="empty-state-sub">Klik tombol "Kocok Sekarang" untuk memulai!</div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Draw screen -->
+      <template x-if="view === 'draw'">
+        <div>
+          <div class="draw-wrap">
+            <div class="crumb" style="margin-bottom:24px;">
+              <button class="btn ghost sm" @click="view='group-detail';sidebarOpen=false" style="padding:4px 8px;">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                <span x-text="activeGroup ? activeGroup.name : 'Grup'"></span>
+              </button>
+              <span class="dot-sep"></span>
+              <span>Kocok Arisan</span>
+            </div>
+
+            <div class="draw-ticket" style="margin-bottom:32px;min-width:min(360px,90vw);">
+              <div class="draw-round-info" x-text="drawRoundInfo"></div>
+              <div class="draw-slot">
+                <div class="draw-slot-label" x-text="drawResultName ? '🎉 Pemenang Putaran Ini' : '🎲 Siap dikocok'"></div>
+                <div
+                  class="draw-slot-name"
+                  :class="{ rolling: drawRolling, revealed: drawResultName && !drawRolling }"
+                  x-text="drawRolling ? drawCurrentName : (drawResultName || '?')"
+                ></div>
+              </div>
+              <div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+                <template x-if="!drawResultName">
+                  <button class="btn clay" @click="executeDraw" :disabled="drawRolling || drawLoading">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <span x-text="drawLoading ? 'Memproses...' : (drawRolling ? 'Mengocok...' : 'Kocok!')"></span>
+                  </button>
+                </template>
+                <template x-if="drawResultName">
+                  <div class="row" style="gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <button class="btn" @click="resetDraw()">Kocok Lagi</button>
+                    <button class="btn clay" @click="view='group-detail';detailTab='rounds'">Lihat Putaran</button>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Remaining participants -->
+            <div style="text-align:center;max-width:400px;">
+              <div class="xs muted" style="margin-bottom:10px;">Belum pernah menang</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+                <template x-for="p in drawEligible" :key="p.id">
+                  <span class="chip" x-text="p.name"></span>
+                </template>
+                <span class="chip" x-show="drawEligible.length === 0" style="color:var(--pandan);">Semua sudah pernah menang 🎉</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Public draw embed -->
+      <template x-if="view === 'public'">
+        <div class="content">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">Kocok <span class="accent">Publik</span></h1>
+              <p class="page-sub">Kocok nama tanpa perlu data grup. Cocok untuk arisan dadakan.</p>
+            </div>
+          </div>
+          <div class="card" style="max-width:520px;" x-data="publicDraw()">
+            <p class="card-eyebrow" style="margin-bottom:16px;">Tambah Peserta</p>
+            <div style="display:flex;gap:10px;margin-bottom:16px;">
+              <input class="input" type="text" placeholder="Nama peserta..." x-model="inputName" @keydown.enter.prevent="addName">
+              <button class="btn clay" @click="addName" :disabled="!inputName.trim()">Tambah</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;margin-bottom:20px;">
+              <template x-for="(n, i) in names" :key="i">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500;background:var(--cream-2);color:var(--ink);border:1px solid var(--line);">
+                  <span x-text="n"></span>
+                  <button @click="names.splice(i,1)" style="width:16px;height:16px;border-radius:50%;background:var(--line-2);font-size:10px;display:grid;place-items:center;">✕</button>
+                </span>
+              </template>
+              <span class="xs muted" x-show="names.length === 0" style="align-self:center;">Tambahkan nama peserta</span>
+            </div>
+            <div class="dash-rule"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <span class="stat-label" style="font-size:11px;">Total</span>
+                <div style="font-family:var(--font-serif);font-size:28px;letter-spacing:-0.02em;" x-text="names.length + ' peserta'"></div>
+              </div>
+              <button class="btn clay" @click="draw()" :disabled="names.length < 2 || rolling">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Kocok!
+              </button>
+            </div>
+            <template x-if="result">
+              <div style="margin-top:20px;text-align:center;padding:24px;background:var(--clay-soft);border-radius:14px;border:1px solid oklch(from var(--clay) l c h / 0.2);">
+                <div style="font-size:36px;margin-bottom:8px;">🎉</div>
+                <div class="stat-label" style="margin-bottom:4px;">Pemenang</div>
+                <div style="font-family:var(--font-serif);font-size:32px;letter-spacing:-0.02em;color:var(--clay);" x-text="result"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+
+<!-- ── Group modal ───────────────────────────── -->
+<div class="modal-overlay" x-show="groupModal.show" @click.self="groupModal.show=false" style="display:none;">
+  <div class="modal">
+    <h3 class="modal-title"><em x-text="groupModal.editing ? 'Edit' : 'Buat'"></em> <span x-text="groupModal.editing ? 'Grup' : 'Grup Baru'"></span></h3>
+    <div class="form-group">
+      <label class="form-label">Nama Grup <span style="color:oklch(0.55 0.18 25)">*</span></label>
+      <input class="input" x-model="groupForm.name" placeholder="cth. Arisan RT 05">
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="form-group" style="flex:0 0 90px;">
+        <label class="form-label">Emoji</label>
+        <input class="input" x-model="groupForm.emoji" placeholder="🎰" maxlength="4">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">Periode</label>
+        <select class="input" x-model="groupForm.period_type">
+          <option value="weekly">Mingguan</option>
+          <option value="monthly">Bulanan</option>
+          <option value="yearly">Tahunan</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Deskripsi</label>
+      <input class="input" x-model="groupForm.description" placeholder="Opsional">
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">Jumlah Peserta <span style="color:oklch(0.55 0.18 25)">*</span></label>
+        <input class="input" type="number" x-model.number="groupForm.num_participants" min="2" placeholder="10">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">Total Putaran <span style="color:oklch(0.55 0.18 25)">*</span></label>
+        <input class="input" type="number" x-model.number="groupForm.total_rounds" min="1" placeholder="10">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nilai Arisan (Rp)</label>
+      <input class="input" type="number" x-model.number="groupForm.prize_amount" min="0" placeholder="0">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="groupModal.show=false">Batal</button>
+      <button class="btn clay" @click="saveGroup" :disabled="groupModal.saving">
+        <span x-text="groupModal.saving ? 'Menyimpan...' : 'Simpan'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Participant modal ──────────────────────── -->
+<div class="modal-overlay" x-show="participantModal.show" @click.self="participantModal.show=false" style="display:none;">
+  <div class="modal">
+    <h3 class="modal-title"><em x-text="participantModal.editing ? 'Edit' : 'Tambah'"></em> Peserta</h3>
+    <div class="form-group">
+      <label class="form-label">Nama <span style="color:oklch(0.55 0.18 25)">*</span></label>
+      <input class="input" x-model="participantForm.name" placeholder="Nama peserta" autofocus>
+    </div>
+    <div class="form-group">
+      <label class="form-label">No. Telepon</label>
+      <input class="input" x-model="participantForm.phone" placeholder="08xxx">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <input class="input" x-model="participantForm.notes" placeholder="Opsional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="participantModal.show=false">Batal</button>
+      <button class="btn clay" @click="saveParticipant" :disabled="participantModal.saving">
+        <span x-text="participantModal.saving ? 'Menyimpan...' : 'Simpan'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Winner override modal ─────────────────── -->
+<div class="modal-overlay" x-show="winnerModal.show" @click.self="winnerModal.show=false" style="display:none;">
+  <div class="modal">
+    <h3 class="modal-title">Set <em>Pemenang</em></h3>
+    <p class="small muted" style="margin-bottom:16px;" x-text="'Putaran ' + (winnerModal.round?.round_number || '')"></p>
+    <div class="form-group">
+      <label class="form-label">Pilih Pemenang <span style="color:oklch(0.55 0.18 25)">*</span></label>
+      <select class="input" x-model.number="winnerForm.winner_id">
+        <option value="">— Pilih peserta —</option>
+        <template x-for="p in (activeGroup?.participants || [])" :key="p.id">
+          <option :value="p.id" x-text="p.name"></option>
+        </template>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <input class="input" x-model="winnerForm.notes" placeholder="Opsional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" @click="winnerModal.show=false">Batal</button>
+      <button class="btn clay" @click="saveWinner" :disabled="winnerModal.saving || !winnerForm.winner_id">
+        <span x-text="winnerModal.saving ? 'Menyimpan...' : 'Simpan'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete confirm modal ───────────────────── -->
+<div class="modal-overlay" x-show="confirmModal.show" @click.self="confirmModal.show=false" style="display:none;">
+  <div class="modal" style="max-width:380px;">
+    <h3 class="modal-title">Hapus <em>data</em>?</h3>
+    <p class="small muted" x-text="confirmModal.message" style="margin-bottom:20px;"></p>
+    <div class="modal-footer">
+      <button class="btn" @click="confirmModal.show=false">Batal</button>
+      <button class="btn" style="background:oklch(0.55 0.18 25);color:white;border-color:transparent;" @click="confirmModal.onConfirm();confirmModal.show=false">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast list ─────────────────────────────── -->
+<div class="toast-list">
+  <template x-for="t in toasts" :key="t.id">
+    <div class="toast" :class="t.type" x-text="t.msg"></div>
+  </template>
+</div>
+
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+/* ── Inline Alpine components ─────────────────── */
+function publicDraw() {
+  return {
+    inputName: '', names: [], rolling: false, result: null, _t: null,
+    addName() {
+      const n = this.inputName.trim();
+      if (!n) return;
+      this.names.push(n);
+      this.inputName = '';
+    },
+    draw() {
+      if (this.names.length < 2) return;
+      this.result = null;
+      this.rolling = true;
+      const picked = this.names[Math.floor(Math.random() * this.names.length)];
+      let count = 0, total = 20;
+      const tick = () => {
+        count++;
+        const idx = Math.floor(Math.random() * this.names.length);
+        this.result = null;
+        this._cur = this.names[idx];
+        if (count < total) {
+          this._t = setTimeout(tick, 60 + Math.pow(count/total, 2.5)*280);
+        } else {
+          this.rolling = false;
+          this.result = picked;
+        }
+      };
+      tick();
+    },
+  };
+}
+
+/* ── Main app ─────────────────────────────────── */
+function app() {
+  return {
+    /* state */
+    user: null,
+    authPage: 'login',
+    authForm: { name: '', email: '', password: '' },
+    authError: '',
+    authLoading: false,
+    dark: false,
+    sidebarOpen: false,
+
+    view: 'groups',
+    groups: [],
+    loadingGroups: false,
+
+    activeGroup: null,
+    detailTab: 'participants',
+
+    /* modals */
+    groupModal: { show: false, editing: null, saving: false },
+    groupForm: { name: '', emoji: '🎰', description: '', period_type: 'monthly', num_participants: 10, total_rounds: 10, prize_amount: 0 },
+    participantModal: { show: false, editing: null, saving: false },
+    participantForm: { name: '', phone: '', notes: '' },
+    winnerModal: { show: false, round: null, saving: false },
+    winnerForm: { winner_id: '', notes: '' },
+    confirmModal: { show: false, message: '', onConfirm: () => {} },
+
+    /* draw */
+    drawRolling: false,
+    drawLoading: false,
+    drawCurrentName: '',
+    drawResultName: '',
+    drawRound: null,
+    _drawTimer: null,
+
+    /* toasts */
+    toasts: [],
+    _toastId: 0,
+
+    /* ── computed ──────────────────────────────── */
+    get pageTitle() {
+      if (this.view === 'groups') return 'Grup Arisan';
+      if (this.view === 'group-detail') return this.activeGroup?.name || 'Detail Grup';
+      if (this.view === 'draw') return 'Kocok Arisan';
+      if (this.view === 'public') return 'Kocok Publik';
+      return 'Kocokan';
+    },
+    get sortedRounds() {
+      return [...(this.activeGroup?.rounds || [])].sort((a, b) => a.round_number - b.round_number);
+    },
+    get drawEligible() {
+      if (!this.activeGroup) return [];
+      const won = new Set((this.activeGroup.rounds || []).filter(r => r.winner_id).map(r => r.winner_id));
+      return (this.activeGroup.participants || []).filter(p => !won.has(p.id));
+    },
+    get drawRoundInfo() {
+      if (!this.activeGroup) return '';
+      const done = (this.activeGroup.rounds || []).filter(r => r.winner_id).length;
+      return `Putaran ${done + 1} dari ${this.activeGroup.total_rounds}`;
+    },
+
+    /* ── init ───────────────────────────────────── */
+    async init() {
+      const saved = localStorage.getItem('koco_user');
+      if (saved) { try { this.user = JSON.parse(saved); } catch {} }
+      const savedDark = localStorage.getItem('koco_dark');
+      if (savedDark !== null) this.setTheme(savedDark === 'true');
+      else this.setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (this.user) this.loadGroups();
+    },
+
+    /* ── theme ──────────────────────────────────── */
+    setTheme(d) {
+      this.dark = d;
+      document.documentElement.classList.toggle('dark', d);
+      localStorage.setItem('koco_dark', d);
+    },
+
+    /* ── auth ───────────────────────────────────── */
+    async doRegister() {
+      this.authError = '';
+      if (!this.authForm.name || !this.authForm.email || !this.authForm.password) {
+        this.authError = 'Semua field harus diisi'; return;
+      }
+      this.authLoading = true;
+      try {
+        const r = await fetch('/api/auth/register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.authForm),
+        });
+        const d = await r.json();
+        if (!r.ok) { this.authError = d.error || 'Gagal daftar'; return; }
+        this.toast('Akun berhasil dibuat! Silakan login.', 'success');
+        this.authPage = 'login';
+        this.authForm.password = '';
+      } catch { this.authError = 'Terjadi kesalahan jaringan'; }
+      finally { this.authLoading = false; }
+    },
+
+    async doLogin() {
+      this.authError = '';
+      this.authLoading = true;
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.authForm.email, password: this.authForm.password }),
+        });
+        const d = await r.json();
+        if (!r.ok) { this.authError = d.error || 'Email atau password salah'; return; }
+        this.user = d.data.user;
+        localStorage.setItem('koco_user', JSON.stringify(this.user));
+        this.loadGroups();
+      } catch { this.authError = 'Terjadi kesalahan jaringan'; }
+      finally { this.authLoading = false; }
+    },
+
+    async doLogout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      this.user = null;
+      localStorage.removeItem('koco_user');
+      this.groups = [];
+      this.activeGroup = null;
+      this.view = 'groups';
+      this.authForm = { name: '', email: '', password: '' };
+    },
+
+    /* ── groups ─────────────────────────────────── */
+    async loadGroups() {
+      this.loadingGroups = true;
+      try {
+        const r = await fetch('/api/groups');
+        if (r.status === 401) { this.user = null; localStorage.removeItem('koco_user'); return; }
+        const d = await r.json();
+        this.groups = d.data || [];
+      } catch { this.toast('Gagal memuat grup', 'error'); }
+      finally { this.loadingGroups = false; }
+    },
+
+    gotoGroups() {
+      this.view = 'groups';
+      this.activeGroup = null;
+      this.sidebarOpen = false;
+      this.loadGroups();
+    },
+
+    gotoGroup(g) {
+      this.activeGroup = g;
+      this.view = 'group-detail';
+      this.detailTab = 'participants';
+      this.sidebarOpen = false;
+    },
+
+    progressPct(g) {
+      if (!g.total_rounds) return 0;
+      const done = (g.rounds || []).filter(r => r.winner_id).length;
+      return Math.round((done / g.total_rounds) * 100);
+    },
+
+    openGroupModal(g = null) {
+      this.groupModal.editing = g;
+      if (g) {
+        this.groupForm = { name: g.name, emoji: g.emoji || '🎰', description: g.description || '', period_type: g.period_type || 'monthly', num_participants: g.num_participants, total_rounds: g.total_rounds, prize_amount: g.prize_amount || 0 };
+      } else {
+        this.groupForm = { name: '', emoji: '🎰', description: '', period_type: 'monthly', num_participants: 10, total_rounds: 10, prize_amount: 0 };
+      }
+      this.groupModal.show = true;
+    },
+
+    async saveGroup() {
+      if (!this.groupForm.name) { this.toast('Nama grup wajib diisi', 'error'); return; }
+      this.groupModal.saving = true;
+      try {
+        const editing = this.groupModal.editing;
+        const method = editing ? 'PUT' : 'POST';
+        const url = editing ? `/api/groups/${editing.id}` : '/api/groups';
+        const r = await fetch(url, {
+          method, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.groupForm),
+        });
+        const d = await r.json();
+        if (!r.ok) { this.toast(d.error || 'Gagal menyimpan', 'error'); return; }
+        this.groupModal.show = false;
+        this.toast(editing ? 'Grup diperbarui' : 'Grup dibuat', 'success');
+        if (editing && this.activeGroup?.id === editing.id) {
+          Object.assign(this.activeGroup, d.data);
+        }
+        await this.loadGroups();
+      } catch { this.toast('Terjadi kesalahan', 'error'); }
+      finally { this.groupModal.saving = false; }
+    },
+
+    /* ── participants ───────────────────────────── */
+    openParticipantModal(p = null) {
+      this.participantModal.editing = p;
+      this.participantForm = p ? { name: p.name, phone: p.phone || '', notes: p.notes || '' } : { name: '', phone: '', notes: '' };
+      this.participantModal.show = true;
+    },
+
+    async saveParticipant() {
+      if (!this.participantForm.name) { this.toast('Nama wajib diisi', 'error'); return; }
+      this.participantModal.saving = true;
+      try {
+        const editing = this.participantModal.editing;
+        const gid = this.activeGroup.id;
+        const method = editing ? 'PUT' : 'POST';
+        const url = editing ? `/api/groups/${gid}/participants/${editing.id}` : `/api/groups/${gid}/participants`;
+        const r = await fetch(url, {
+          method, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.participantForm),
+        });
+        const d = await r.json();
+        if (!r.ok) { this.toast(d.error || 'Gagal menyimpan', 'error'); return; }
+        this.participantModal.show = false;
+        this.toast(editing ? 'Peserta diperbarui' : 'Peserta ditambahkan', 'success');
+        await this.refreshActiveGroup();
+      } catch { this.toast('Terjadi kesalahan', 'error'); }
+      finally { this.participantModal.saving = false; }
+    },
+
+    deleteParticipant(p) {
+      this.confirmModal = {
+        show: true,
+        message: `Hapus peserta "${p.name}"? Tindakan ini tidak bisa dibatalkan.`,
+        onConfirm: async () => {
+          try {
+            const r = await fetch(`/api/groups/${this.activeGroup.id}/participants/${p.id}`, { method: 'DELETE' });
+            if (!r.ok) { this.toast('Gagal menghapus', 'error'); return; }
+            this.toast('Peserta dihapus', 'success');
+            await this.refreshActiveGroup();
+          } catch { this.toast('Terjadi kesalahan', 'error'); }
+        },
+      };
+    },
+
+    /* ── rounds / draw ───────────────────────────── */
+    openDrawScreen() {
+      this.drawRolling = false;
+      this.drawLoading = false;
+      this.drawCurrentName = '';
+      this.drawResultName = '';
+      this.drawRound = null;
+      this.view = 'draw';
+      this.sidebarOpen = false;
+    },
+
+    async executeDraw() {
+      if (!this.activeGroup) return;
+      this.drawLoading = true;
+      try {
+        const r = await fetch(`/api/groups/${this.activeGroup.id}/draw`, { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) { this.toast(d.error || 'Gagal kocok', 'error'); this.drawLoading = false; return; }
+        const round = d.data;
+        this.drawRound = round;
+        this.drawLoading = false;
+        this.startDrawAnimation(round.winner?.name || '?');
+        await this.refreshActiveGroup();
+      } catch { this.toast('Terjadi kesalahan', 'error'); this.drawLoading = false; }
+    },
+
+    startDrawAnimation(finalName) {
+      const eligible = this.drawEligible;
+      if (eligible.length === 0) return;
+      this.drawRolling = true;
+      let count = 0, total = 24;
+      const names = eligible.map(p => p.name);
+      const tick = () => {
+        count++;
+        this.drawCurrentName = names[Math.floor(Math.random() * names.length)];
+        if (count < total) {
+          this._drawTimer = setTimeout(tick, 55 + Math.pow(count / total, 2.5) * 320);
+        } else {
+          this.drawRolling = false;
+          this.drawResultName = finalName;
+        }
+      };
+      tick();
+    },
+
+    resetDraw() {
+      this.drawResultName = '';
+      this.drawRound = null;
+    },
+
+    openWinnerModal(r) {
+      this.winnerModal.round = r;
+      this.winnerForm = { winner_id: r.winner_id || '', notes: r.notes || '' };
+      this.winnerModal.show = true;
+    },
+
+    async saveWinner() {
+      if (!this.winnerForm.winner_id) { this.toast('Pilih pemenang terlebih dahulu', 'error'); return; }
+      this.winnerModal.saving = true;
+      try {
+        const r = await fetch(`/api/groups/${this.activeGroup.id}/rounds/${this.winnerModal.round.id}/winner`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ winner_id: this.winnerForm.winner_id, notes: this.winnerForm.notes }),
+        });
+        const d = await r.json();
+        if (!r.ok) { this.toast(d.error || 'Gagal menyimpan', 'error'); return; }
+        this.winnerModal.show = false;
+        this.toast('Pemenang diperbarui', 'success');
+        await this.refreshActiveGroup();
+      } catch { this.toast('Terjadi kesalahan', 'error'); }
+      finally { this.winnerModal.saving = false; }
+    },
+
+    /* ── helpers ─────────────────────────────────── */
+    async refreshActiveGroup() {
+      if (!this.activeGroup) return;
+      try {
+        const r = await fetch(`/api/groups/${this.activeGroup.id}`);
+        const d = await r.json();
+        if (r.ok) this.activeGroup = d.data;
+      } catch {}
+      await this.loadGroups();
+    },
+
+    formatRupiah(n) {
+      if (!n) return 'Rp 0';
+      return 'Rp ' + Number(n).toLocaleString('id-ID');
+    },
+
+    formatDate(s) {
+      if (!s) return '';
+      return new Date(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    toast(msg, type = '') {
+      const id = ++this._toastId;
+      this.toasts.push({ id, msg, type });
+      setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
+    },
+  };
+}
+</script>
+</body>
+</html>
