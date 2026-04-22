@@ -307,6 +307,48 @@
 .tab.active { color: var(--clay); border-color: var(--clay); }
 .tab:hover:not(.active) { color: var(--ink-2); }
 
+/* ── Draw modes ──────────────────────────────── */
+.mode-picker { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+.mode-btn {
+  padding: 7px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 500;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+  transition: all .15s;
+}
+.mode-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+.reel-viewport {
+  position: relative; width: 240px; height: 144px; overflow: hidden;
+  border: 1.5px solid var(--line); border-radius: 14px; background: var(--card);
+  margin: 0 auto 16px;
+}
+.reel-fade {
+  position: absolute; inset: 0;
+  background: linear-gradient(var(--card) 0%, transparent 28%, transparent 72%, var(--card) 100%);
+  z-index: 2; pointer-events: none;
+}
+.reel-highlight {
+  position: absolute; top: 50%; left: 0; right: 0; height: 48px;
+  transform: translateY(-50%);
+  border-top: 1.5px solid var(--clay); border-bottom: 1.5px solid var(--clay);
+  background: var(--clay-soft); z-index: 1; pointer-events: none;
+}
+.reel-strip {
+  display: flex; flex-direction: column;
+  will-change: transform;
+}
+.reel-item {
+  height: 48px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif); font-size: 20px; letter-spacing: -0.015em;
+  flex-shrink: 0;
+}
+.dice-face {
+  font-size: 72px; line-height: 1; display: block; text-align: center;
+  transition: transform .1s;
+}
+.dice-face.shaking { animation: diceShake .09s steps(2) infinite; }
+.dice-face.landing { animation: diceLand .4s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes diceShake { 0% { transform: rotate(-12deg) scale(1.05); } 100% { transform: rotate(12deg) scale(0.95); } }
+@keyframes diceLand { from { transform: scale(0.4) rotate(20deg); } to { transform: scale(1) rotate(0); } }
+
 /* ── Empty state ─────────────────────────────── */
 .empty-state {
   padding: 56px 24px;
@@ -328,6 +370,18 @@
 </style>
 </head>
 <body x-data="app()" x-init="init()">
+
+<!-- ── Theme toggle (always visible) ────────── -->
+<div style="position:fixed;top:16px;right:16px;z-index:300;">
+  <div class="theme-toggle">
+    <button :class="{ active: !dark }" @click="setTheme(false)" title="Terang">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+    </button>
+    <button :class="{ active: dark }" @click="setTheme(true)" title="Gelap">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
 
 <!-- ── Sidebar overlay (mobile) ─────────────── -->
 <div
@@ -456,8 +510,9 @@
             <div style="font-size:13px;font-weight:600;" x-text="user.name"></div>
             <div class="xs muted" x-text="user.email"></div>
           </div>
-          <button class="btn ghost sm" @click="doLogout" title="Logout">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <button class="btn ghost sm" @click="doLogout" style="color:oklch(0.55 0.15 25);gap:5px;" title="Logout">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Keluar
           </button>
         </div>
       </div>
@@ -702,17 +757,56 @@
               <span>Kocok Arisan</span>
             </div>
 
+            <!-- Mode picker -->
+            <div class="mode-picker" x-show="!drawRolling && !drawResultName">
+              <button class="mode-btn" :class="{ active: drawMode==='slot' }" @click="drawMode='slot'">🎰 Slot</button>
+              <button class="mode-btn" :class="{ active: drawMode==='roda' }" @click="drawMode='roda'">🎡 Roda</button>
+              <button class="mode-btn" :class="{ active: drawMode==='dadu' }" @click="drawMode='dadu'">🎲 Dadu</button>
+            </div>
+
             <div class="draw-ticket" style="margin-bottom:32px;min-width:min(360px,90vw);">
               <div class="draw-round-info" x-text="drawRoundInfo"></div>
-              <div class="draw-slot">
-                <div class="draw-slot-label" x-text="drawResultName ? '🎉 Pemenang Putaran Ini' : '🎲 Siap dikocok'"></div>
+
+              <!-- Slot mode -->
+              <div class="draw-slot" x-show="drawMode === 'slot'">
+                <div class="draw-slot-label" x-text="drawResultName ? '🎉 Pemenang Putaran Ini' : '🎰 Siap dikocok'"></div>
                 <div
                   class="draw-slot-name"
                   :class="{ rolling: drawRolling, revealed: drawResultName && !drawRolling }"
                   x-text="drawRolling ? drawCurrentName : (drawResultName || '?')"
                 ></div>
               </div>
-              <div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+
+              <!-- Roda mode -->
+              <div x-show="drawMode === 'roda'" style="padding:8px 0;">
+                <div class="draw-slot-label" x-text="drawResultName ? '🎉 Pemenang Putaran Ini' : '🎡 Putar roda!'"></div>
+                <div class="reel-viewport">
+                  <div class="reel-fade"></div>
+                  <div class="reel-highlight"></div>
+                  <div class="reel-strip" :style="`transform:translateY(-${_reelOffset}px)`">
+                    <template x-for="(name, i) in reelAllNames" :key="i">
+                      <div class="reel-item" x-text="name"></div>
+                    </template>
+                  </div>
+                </div>
+                <div class="draw-slot-name" style="font-size:clamp(28px,5vw,48px);"
+                  :class="{ revealed: drawResultName && !drawRolling }"
+                  x-show="drawResultName && !drawRolling"
+                  x-text="drawResultName"
+                ></div>
+              </div>
+
+              <!-- Dadu mode -->
+              <div x-show="drawMode === 'dadu'" style="padding:8px 0;text-align:center;">
+                <div class="draw-slot-label" x-text="drawResultName ? '🎉 Pemenang Putaran Ini' : '🎲 Lempar dadu!'"></div>
+                <span class="dice-face" :class="{ shaking: drawRolling, landing: drawResultName && !drawRolling }" x-text="diceFace"></span>
+                <div style="font-family:var(--font-serif);font-size:clamp(24px,5vw,40px);letter-spacing:-0.02em;margin-top:8px;min-height:1.2em;"
+                  :class="{ revealed: drawResultName && !drawRolling }"
+                  x-text="drawRolling ? drawCurrentName : (drawResultName || '?')"
+                ></div>
+              </div>
+
+              <div class="row" style="justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;">
                 <template x-if="!drawResultName">
                   <button class="btn clay" @click="executeDraw" :disabled="drawRolling || drawLoading">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -975,12 +1069,19 @@ function app() {
     confirmModal: { show: false, message: '', onConfirm: () => {} },
 
     /* draw */
+    drawMode: 'slot',
     drawRolling: false,
     drawLoading: false,
     drawCurrentName: '',
     drawResultName: '',
     drawRound: null,
+    drawNames: [],
     _drawTimer: null,
+    /* roda */
+    _reelOffset: 0,
+    _reelRAF: null,
+    /* dadu */
+    diceFace: '🎲',
 
     /* toasts */
     toasts: [],
@@ -996,6 +1097,13 @@ function app() {
     },
     get sortedRounds() {
       return [...(this.activeGroup?.rounds || [])].sort((a, b) => a.round_number - b.round_number);
+    },
+    get reelAllNames() {
+      const names = this.drawNames.length ? this.drawNames : (this.activeGroup?.participants || []).map(p => p.name);
+      if (!names.length) return [];
+      const result = [];
+      for (let i = 0; i < 6; i++) result.push(...names);
+      return result;
     },
     get drawEligible() {
       if (!this.activeGroup) return [];
@@ -1188,12 +1296,16 @@ function app() {
       this.drawCurrentName = '';
       this.drawResultName = '';
       this.drawRound = null;
+      this.drawNames = this.drawEligible.map(p => p.name);
+      this.diceFace = '🎲';
+      this._reelOffset = 0;
       this.view = 'draw';
       this.sidebarOpen = false;
     },
 
     async executeDraw() {
       if (!this.activeGroup) return;
+      const eligibleSnapshot = this.drawEligible.map(p => p.name);
       this.drawLoading = true;
       try {
         const r = await fetch(`/api/groups/${this.activeGroup.id}/draw`, { method: 'POST' });
@@ -1202,17 +1314,20 @@ function app() {
         const round = d.data;
         this.drawRound = round;
         this.drawLoading = false;
-        this.startDrawAnimation(round.winner?.name || '?');
+        this.drawNames = eligibleSnapshot;
+        const winnerName = round.winner?.name || '?';
+        if (this.drawMode === 'roda') this.startReelSpin(winnerName);
+        else if (this.drawMode === 'dadu') this.startDiceAnimation(winnerName);
+        else this.startDrawAnimation(winnerName);
         await this.refreshActiveGroup();
       } catch { this.toast('Terjadi kesalahan', 'error'); this.drawLoading = false; }
     },
 
     startDrawAnimation(finalName) {
-      const eligible = this.drawEligible;
-      if (eligible.length === 0) return;
+      const names = this.drawNames;
+      if (names.length === 0) return;
       this.drawRolling = true;
       let count = 0, total = 24;
-      const names = eligible.map(p => p.name);
       const tick = () => {
         count++;
         this.drawCurrentName = names[Math.floor(Math.random() * names.length)];
@@ -1226,9 +1341,62 @@ function app() {
       tick();
     },
 
+    startReelSpin(finalName) {
+      const names = this.drawNames;
+      if (!names.length) return;
+      const itemH = 48;
+      const winnerBaseIdx = names.indexOf(finalName);
+      const targetIdx = (winnerBaseIdx === -1 ? 0 : winnerBaseIdx) + names.length * 3;
+      const targetOffset = targetIdx * itemH;
+      this._reelOffset = names.length * itemH; // start at second repetition
+      this.drawRolling = true;
+      const startOffset = this._reelOffset;
+      const distance = targetOffset - startOffset;
+      const startTime = performance.now();
+      const duration = 2800;
+      if (this._reelRAF) cancelAnimationFrame(this._reelRAF);
+      const animate = (now) => {
+        const t = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 5);
+        this._reelOffset = startOffset + distance * eased;
+        if (t >= 1) {
+          this._reelOffset = targetOffset;
+          this.drawRolling = false;
+          this.drawResultName = finalName;
+          return;
+        }
+        this._reelRAF = requestAnimationFrame(animate);
+      };
+      this._reelRAF = requestAnimationFrame(animate);
+    },
+
+    startDiceAnimation(finalName) {
+      const names = this.drawNames;
+      const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+      this.drawRolling = true;
+      this.diceFace = '🎲';
+      let count = 0, total = 22;
+      const tick = () => {
+        count++;
+        this.diceFace = faces[Math.floor(Math.random() * 6)];
+        this.drawCurrentName = names[Math.floor(Math.random() * names.length)];
+        if (count < total) {
+          setTimeout(tick, 50 + Math.pow(count / total, 2.2) * 250);
+        } else {
+          this.drawRolling = false;
+          this.diceFace = '🎲';
+          this.drawResultName = finalName;
+        }
+      };
+      tick();
+    },
+
     resetDraw() {
       this.drawResultName = '';
       this.drawRound = null;
+      this.drawCurrentName = '';
+      this.diceFace = '🎲';
+      this._reelOffset = 0;
     },
 
     openWinnerModal(r) {
