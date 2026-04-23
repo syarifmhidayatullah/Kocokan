@@ -45,12 +45,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		response.Error(c, 401, err.Error())
 		return
 	}
-	c.SetCookie("koco_token", token, int(72*time.Hour.Seconds()), "/", "", false, true)
+	maxAge := int(30 * 24 * time.Hour.Seconds())
+	secure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	c.SetCookie("koco_token", token, maxAge, "/", "", secure, true)
 	response.OK(c, gin.H{"token": token, "user": user})
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("koco_token", "", -1, "/", "", false, true)
+	secure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	c.SetCookie("koco_token", "", -1, "/", "", secure, true)
 	response.Message(c, "Logout berhasil")
 }
 

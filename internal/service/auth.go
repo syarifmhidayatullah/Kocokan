@@ -71,7 +71,7 @@ func (s *AuthService) generateToken(u *model.User) (string, error) {
 		"sub":   u.ID,
 		"name":  u.Name,
 		"email": u.Email,
-		"exp":   time.Now().Add(72 * time.Hour).Unix(),
+		"exp":   time.Now().Add(30 * 24 * time.Hour).Unix(),
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.jwtSecret))
 }
