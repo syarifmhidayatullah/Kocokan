@@ -123,6 +123,7 @@ a { color: inherit; text-decoration: none; }
   .sidebar {
     position: fixed; inset: 0 auto 0 0;
     width: 260px; z-index: 50;
+    height: auto;
     transform: translateX(-100%);
     transition: transform .25s ease;
   }
