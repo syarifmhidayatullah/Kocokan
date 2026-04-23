@@ -154,7 +154,7 @@ a { color: inherit; text-decoration: none; }
 }
 .brand-name span { font-family: var(--font-display); font-weight: 500; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3); display: block; margin-top: 5px; }
 
-.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; min-height: 0; }
 .nav-section {
   font-family: var(--font-display);
   font-weight: 600;
