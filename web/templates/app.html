@@ -371,14 +371,6 @@
 </head>
 <body x-data="app()" x-init="init()">
 
-<!-- ── Sidebar overlay (mobile) ─────────────── -->
-<div
-  x-show="sidebarOpen"
-  @click="sidebarOpen = false"
-  style="position:fixed;inset:0;background:oklch(0.18 0.01 270 / 0.5);z-index:40;display:none;"
-  x-transition.opacity
-></div>
-
 <!-- ── Auth pages (login / register) ─────────── -->
 <template x-if="!user">
   <div class="auth-wrap">
@@ -462,6 +454,14 @@
 <!-- ── Main app shell ─────────────────────────── -->
 <template x-if="user">
   <div class="app">
+
+    <!-- Sidebar overlay (mobile) — inside app stacking context so z-index works -->
+    <div
+      x-show="sidebarOpen"
+      @click="sidebarOpen = false"
+      style="position:fixed;inset:0;background:oklch(0.18 0.01 270 / 0.5);z-index:45;display:none;"
+      x-transition.opacity
+    ></div>
 
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ open: sidebarOpen }">
